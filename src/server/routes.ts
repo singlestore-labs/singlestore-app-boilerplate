@@ -1,5 +1,9 @@
 import * as express from "express";
-import { connectSingleStore } from "./connection";
+import {
+    connectSingleStore,
+    createDatabase,
+    stopSingleStore,
+} from "./connection";
 const bodyParser = require("body-parser");
 
 const app = express();
@@ -15,7 +19,11 @@ router.post("/setup", bodyParser.json(), (req, res, next) => {
     process.env.HOST = req.body.hostname;
     process.env.PASSWORD = req.body.password;
 
-    connectSingleStore("todo");
+    const connection = connectSingleStore();
+    if (connection) {
+        createDatabase({ connection, database: "todo" });
+        stopSingleStore(connection);
+    }
 
     res.json("/SETUP!");
 });

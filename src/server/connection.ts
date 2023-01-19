@@ -1,19 +1,29 @@
-import mysql from "mysql2/promise";
+import * as mysql from "mysql2";
 
-export async function connectSingleStore(databaseName) {
-    let connection;
-
+export function connectSingleStore() {
     try {
-        connection = await mysql
-            .createConnection({
-                host: process.env.HOST,
-                password: process.env.PASSWORD,
-                user: "admin",
-            })
-            .then((conn) => {
-                conn.query(`CREATE DATABASE IF NOT EXISTS ${databaseName}`);
-            });
+        const connection = mysql.createConnection({
+            host: process.env.HOST,
+            password: process.env.PASSWORD,
+            user: "admin",
+        });
+
+        return connection;
     } catch (error) {
         console.error(error);
     }
+}
+
+export async function createDatabase({
+    connection,
+    database,
+}: {
+    connection: mysql.Connection;
+    database: string;
+}) {
+    connection.query(`CREATE DATABASE IF NOT EXISTS ${database}`);
+}
+
+export function stopSingleStore(connection: mysql.Connection) {
+    connection.end();
 }
