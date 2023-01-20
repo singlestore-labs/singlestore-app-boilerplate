@@ -21,8 +21,6 @@ router.get("/api/hello", (req, res, next) => {
 });
 
 router.post("/setup", bodyParser.json(), async (req, res, next) => {
-    console.log("//setup on the boilerplate side//", { req: req.body });
-
     const host = req.body.hostname;
     const password = req.body.password;
 

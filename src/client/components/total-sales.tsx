@@ -38,7 +38,7 @@ export const TotalSales = (props: CardProps) => {
                 console.log({ response });
 
                 setItems(
-                    response.data.map((item) => ({
+                    response.data.map((item: Item) => ({
                         name: item.name,
                         price: item.price,
                     }))
@@ -59,7 +59,7 @@ export const TotalSales = (props: CardProps) => {
                 console.log({ response });
 
                 setSales(
-                    response.data.map((sale) => ({
+                    response.data.map((sale: Sale) => ({
                         item: sale.item,
                         quantity: sale.quantity,
                     }))
