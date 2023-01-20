@@ -1,5 +1,6 @@
 import * as mysql from "mysql2/promise";
 
+
 const BASE_CONFIG: mysql.ConnectionOptions = {
     host: process.env.HOST,
     password: process.env.PASSWORD,
