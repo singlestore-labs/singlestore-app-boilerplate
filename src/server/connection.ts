@@ -1,8 +1,8 @@
 import * as mysql from "mysql2/promise";
 
 const BASE_CONFIG: mysql.ConnectionOptions = {
-    host: "svc-b52e7213-8514-429d-bfde-dcb921653646-dml.aws-london-1.svc.singlestore.com", //process.env.HOST,
-    password: "HGW[9*L{TxI]AkgPf]_V", // process.env.PASSWORD,
+    host: process.env.HOST,
+    password: process.env.PASSWORD,
     user: "admin",
 };
 
