@@ -1,17 +1,19 @@
 import * as mysql from "mysql2/promise";
-
-
-const BASE_CONFIG: mysql.ConnectionOptions = {
-    host: process.env.HOST,
-    password: process.env.PASSWORD,
-    user: "admin",
-};
+import * as dotenv from "dotenv";
 
 export async function connectSingleStore(
     config: Partial<mysql.ConnectionOptions> = {}
 ) {
+    dotenv.config();
+
+    const baseConfig: mysql.ConnectionOptions = {
+        host: process.env.HOST,
+        password: process.env.PASSWORD,
+        user: "admin",
+    };
+
     return await mysql.createConnection({
-        ...BASE_CONFIG,
+        ...baseConfig,
         ...config,
     });
 }
@@ -29,7 +31,7 @@ export async function getDatabases({ conn }: { conn?: mysql.Connection } = {}) {
         }
 
         const [results] = await conn.query("SHOW DATABASES");
-        console.log({ results });
+        console.log("get databases:", { results });
 
         if (closeConn) {
             await stopSingleStore(conn);
@@ -59,7 +61,7 @@ export async function createDatabase({
         const [results] = await conn.query("CREATE DATABASE IF NOT EXISTS ?", [
             database,
         ]);
-        console.log({ results });
+        console.log("create database:", database, { results });
 
         if (closeConn) {
             await stopSingleStore(conn);
@@ -87,7 +89,7 @@ export async function deleteDatabase({
         }
 
         const [results] = await conn.query("DROP DATABASE ?", [database]);
-        console.log({ results });
+        console.log("delete database:", database, { results });
 
         if (closeConn) {
             await stopSingleStore(conn);
@@ -121,7 +123,7 @@ export async function createTable({
         const [results] = await conn.query(
             `CREATE TABLE IF NOT EXISTS ${table} (${columns.toString()})`
         );
-        console.log({ results });
+        console.log("create table:", table, { results });
 
         if (closeConn) {
             await stopSingleStore(conn);
@@ -151,7 +153,7 @@ export async function selectTable({
         }
 
         const [rows, fields] = await conn.query(`SELECT * FROM ${table}`);
-        console.log({ rows, fields });
+        console.log("select table:", table, { rows });
 
         if (closeConn) {
             await stopSingleStore(conn);
@@ -175,7 +177,7 @@ export async function insertTable({
     database: string;
     table: string;
     columns: Array<string>;
-    values: Array<string>;
+    values: Array<any>;
 }) {
     try {
         let closeConn = false;
@@ -188,7 +190,8 @@ export async function insertTable({
             `INSERT INTO ${table} (${columns.toString()}) VALUES (?)`,
             [values]
         );
-        console.log({ results });
+
+        console.log("insert table:", table, { results });
 
         if (closeConn) {
             await stopSingleStore(conn);
@@ -196,7 +199,8 @@ export async function insertTable({
 
         return results;
     } catch (error) {
-        console.error({ error });
-        return error;
+        console.log("put error");
+        console.error(error);
+        // return error;
     }
 }
