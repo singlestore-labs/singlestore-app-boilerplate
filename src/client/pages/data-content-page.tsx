@@ -3,6 +3,7 @@ import { Box, Container, Grid } from "@mui/material";
 import { Sales } from "../components/sales";
 import { TotalCustomers } from "../components/total-customers";
 import { TotalItems } from "../components/total-items";
+import { TotalSales } from "../components/total-sales";
 
 export function DataContentPage() {
     return (
@@ -21,7 +22,7 @@ export function DataContentPage() {
                             <TotalItems />
                         </Grid>
                         <Grid item xl={4} lg={4} sm={6} xs={12}>
-                            <TotalCustomers />
+                            <TotalSales />
                         </Grid>
                         <Grid item xl={4} lg={4} sm={6} xs={12}>
                             <TotalCustomers />

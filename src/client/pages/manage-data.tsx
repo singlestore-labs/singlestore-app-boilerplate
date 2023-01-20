@@ -7,65 +7,153 @@ import {
     Grid,
     InputAdornment,
     LinearProgress,
+    Box,
     styled,
     Typography,
+    TextField as TextFieldMUI,
 } from "@mui/material";
+import dayjs, { Dayjs } from "dayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { Container } from "@mui/system";
 import axios from "axios";
 
-type Values = {
-    name: string;
-    price: number;
-    // delta: number;
-};
-const initialValues = {
-    name: "",
-    price: 0,
-    // delta: 0,
-};
+function AddItem() {
+    type AddItemValues = {
+        name: string;
+        price: number;
+    };
+    const addItemInitialValues = {
+        name: "",
+        price: 0,
+    };
 
-export const validationSchema = yup.object({
-    name: yup.string().required("Name is required"),
-    price: yup
-        .number()
-        .positive("Enter a positive price")
-        .required("Price is required"),
-    // delta: yup
-    //     .number()
-    //     .min(0, "min value is 0")
-    //     .max(1, "max value is 1")
-    //     .required("Price is required"),
-});
+    const validationSchema = yup.object({
+        name: yup.string().required("Name is required"),
+        price: yup
+            .number()
+            .positive("Enter a positive price")
+            .required("Price is required"),
+    });
 
-const StyledField = styled(Field)(({ theme }) => ({
-    margin: "12px",
-}));
-
-export function ManageData() {
     const handleSubmit = async (
-        formValues: Values,
-        actions: FormikHelpers<Values>
+        formValues: AddItemValues,
+        actions: FormikHelpers<AddItemValues>
     ) => {
         try {
-            let response = await axios({
-                method: "GET",
+            const response = await axios({
+                method: "POST",
                 url: "/api/database/shop/table/items",
                 baseURL: "http://localhost:3000",
+                headers: { "Content-Type": "application/json" },
+                data: {
+                    columns: ["name", "price"],
+                    values: [formValues.name, formValues.price],
+                },
             });
 
             console.log({ response });
 
-            response = await axios({
-                method: "PUT",
-                url: "/api/database/shop/table",
+            actions.setSubmitting(false);
+        } catch (error) {
+            console.error(JSON.stringify(error));
+        }
+    };
+
+    return (
+        <Grid item xl={4} lg={4} sm={4} xs={4}>
+            <Typography color="primary">Add item</Typography>
+            <Formik
+                initialValues={addItemInitialValues}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+            >
+                {(props) => {
+                    const { errors, isValid, isSubmitting, touched } = props;
+
+                    return (
+                        <Form noValidate>
+                            <StyledField
+                                component={TextField}
+                                name="name"
+                                label="Name"
+                                fullWidth
+                                required
+                            />
+
+                            <StyledField
+                                component={TextField}
+                                name="price"
+                                label="Price"
+                                type="number"
+                                step={0.01}
+                                fullWidth
+                                required
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            €
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+
+                            {isSubmitting && <LinearProgress />}
+
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                disabled={!isValid || isSubmitting}
+                            >
+                                Submit
+                            </Button>
+                        </Form>
+                    );
+                }}
+            </Formik>
+        </Grid>
+    );
+}
+
+function AddSale() {
+    type AddSaleValues = {
+        item: string;
+        quantity: number;
+        date: Dayjs;
+    };
+
+    const addSaleInitialValues = {
+        item: "",
+        quantity: 0,
+        date: dayjs(),
+    };
+
+    const validationSchema = yup.object({
+        item: yup.string().required("Item is required"),
+        quantity: yup
+            .number()
+            .positive("Enter a positive quantity")
+            .required("Quantity is required"),
+    });
+
+    const handleSubmit = async (
+        formValues: AddSaleValues,
+        actions: FormikHelpers<AddSaleValues>
+    ) => {
+        try {
+            const response = await axios({
+                method: "POST",
+                url: "/api/database/shop/table/sales",
                 baseURL: "http://localhost:3000",
+                headers: { "Content-Type": "application/json" },
                 data: {
-                    table: "items",
-                    colums: ["id", "name", "price"],
+                    columns: ["item", "quantity", "date"],
                     values: [
-                        response.data.length + 1,
-                        formValues.name,
-                        formValues.price,
+                        formValues.item,
+                        formValues.quantity,
+                        dayjs(formValues.date).format("YYYY/MM/DD"),
                     ],
                 },
             });
@@ -79,75 +167,90 @@ export function ManageData() {
     };
 
     return (
-        <Container>
-            <Grid item xl={4} lg={4} sm={4} xs={4}>
-                <Typography color="primary">Add item</Typography>
-                <Formik
-                    initialValues={initialValues}
-                    validationSchema={validationSchema}
-                    onSubmit={handleSubmit}
-                >
-                    {(props) => {
-                        const { errors, isValid, isSubmitting, touched } =
-                            props;
+        <Grid item xl={4} lg={4} sm={4} xs={4}>
+            <Typography color="primary">Add sale</Typography>
+            <Formik
+                initialValues={addSaleInitialValues}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+            >
+                {(props) => {
+                    const {
+                        errors,
+                        isValid,
+                        isSubmitting,
+                        touched,
+                        values,
+                        setFieldValue,
+                    } = props;
 
-                        return (
-                            <Form noValidate>
-                                <StyledField
-                                    component={TextField}
-                                    name="name"
-                                    label="Name"
-                                    fullWidth
-                                    required
-                                />
+                    return (
+                        <Form noValidate>
+                            <StyledField
+                                component={TextField}
+                                name="item"
+                                label="Item"
+                                fullWidth
+                                required
+                            />
 
-                                <StyledField
-                                    component={TextField}
-                                    name="price"
-                                    label="Price"
-                                    type="number"
-                                    step={0.01}
-                                    fullWidth
-                                    required
-                                    InputProps={{
-                                        endAdornment: (
-                                            <InputAdornment position="end">
-                                                €
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
+                            <StyledField
+                                component={TextField}
+                                name="quantity"
+                                label="Quantity"
+                                type="number"
+                                step={1}
+                                fullWidth
+                                required
+                            />
 
-                                {/* <StyledField
-                                    component={TextField}
-                                    name="delta"
-                                    label="Delta"
-                                    type="number"
-                                    step={0.01}
-                                    fullWidth
-                                    required
-                                    helperText={
-                                        touched.delta
-                                            ? errors.delta
-                                            : "Value between 0 and 1"
-                                    }
-                                /> */}
-
-                                {isSubmitting && <LinearProgress />}
-
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="primary"
-                                    disabled={!isValid || isSubmitting}
+                            <Box sx={{ margin: "12px" }}>
+                                <LocalizationProvider
+                                    dateAdapter={AdapterDayjs}
                                 >
-                                    Submit
-                                </Button>
-                            </Form>
-                        );
-                    }}
-                </Formik>
-            </Grid>
+                                    <DesktopDatePicker
+                                        label="Date"
+                                        inputFormat="YYYY/MM/DD"
+                                        value={values.date}
+                                        onChange={(newValue) => {
+                                            if (newValue !== null) {
+                                                setFieldValue("date", newValue);
+                                            }
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextFieldMUI {...params} />
+                                        )}
+                                    />
+                                </LocalizationProvider>
+                            </Box>
+
+                            {isSubmitting && <LinearProgress />}
+
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                disabled={!isValid || isSubmitting}
+                            >
+                                Submit
+                            </Button>
+                        </Form>
+                    );
+                }}
+            </Formik>
+        </Grid>
+    );
+}
+
+const StyledField = styled(Field)(({ theme }) => ({
+    margin: "12px",
+}));
+
+export function ManageData() {
+    return (
+        <Container>
+            <AddItem />
+            <AddSale />
         </Container>
     );
 }
