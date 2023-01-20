@@ -9,6 +9,8 @@ import {
     selectTable,
     stopSingleStore,
 } from "./connection";
+import * as fs from "fs";
+import * as dotenv from "dotenv";
 const bodyParser = require("body-parser");
 
 const app = express();
@@ -21,14 +23,52 @@ router.get("/api/hello", (req, res, next) => {
 router.post("/setup", bodyParser.json(), async (req, res, next) => {
     console.log("//setup on the boilerplate side//", { req: req.body });
 
-    process.env.HOST = req.body.hostname;
-    process.env.PASSWORD = req.body.password;
+    const host = req.body.hostname;
+    const password = req.body.password;
 
-    const connection = await connectSingleStore();
-    if (connection) {
-        createDatabase({ conn: connection, database: "todo" });
-        stopSingleStore(connection);
+    try {
+        fs.writeFileSync(".env", `HOST="${host}"\nPASSWORD="${password}"`);
+    } catch (err) {
+        console.error(err);
     }
+
+    try {
+        const data = fs.readFileSync(".env", "utf-8");
+        console.log({ data });
+    } catch (err) {
+        console.error(err);
+    }
+
+    dotenv.config();
+
+    console.log(process.env.HOST, process.env.PASSWORD);
+
+    const database = "shop";
+    let table = "items";
+    await createDatabase({ database });
+
+    let columns = ["id BIGINT", "name VARCHAR(255)", "price FLOAT"];
+    await createTable({ database, table, columns });
+
+    columns = ["id", "name", "price"];
+    await insertTable({
+        database,
+        table,
+        columns,
+        values: [1, "milk", 1.99],
+    });
+
+    table = "sales";
+    columns = ["id BIGINT", "item VARCHAR(255)", "quantity INT", "date DATE"];
+    await createTable({ database, table, columns });
+
+    columns = ["id", "item", "quantity", "date"];
+    await insertTable({
+        database,
+        table,
+        columns,
+        values: [1, "milk", 3, "2023-08-5"],
+    });
 
     res.json("/SETUP!");
 });
@@ -90,7 +130,7 @@ router.put(
         const columns = req.body.columns;
         const values = req.body.values;
         const sqlRes = await insertTable({ database, table, columns, values });
-        res.json(sqlRes);
+        res.json({ sqlRes });
     }
 );
 
